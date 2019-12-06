@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map For hw_rng
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SimpleHacks	KEYWORD1
+HW_RNG	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# QDEC methods
+begin	KEYWORD2
+end	KEYWORD2
+get_uint8
+get_uint16
+get_uint32
+get_uint64
+fill
+fill_buffer
+
+#######################################
+# Constants (LITERAL1)
+#######################################
