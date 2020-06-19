@@ -51,6 +51,25 @@
     #error "Library currenly only known to support NRF52 architecture"
 #endif
 
+// Somewhere between nrfx v1.7.2 (which this library was originally written for) and
+// nrfx v2.1.0, Nordic made significant breaking changes to their API.  This breaking
+// API change is not listed in the nrfx changelog.
+// 
+// It is desirable to hide this breaking API change from users.
+//
+// [HACK] check for existence of NRFX_STATIC_INLINE, which was not defined
+//        in nrfx v1.x, but is defined in nrfx v2.x.
+//        This works even if NRFX_STATIC_INLINE is defined to nothing
+//
+#if defined(NRFX_STATIC_INLINE)
+    #define SIMPLEHACKS_HW_RNG_NRFX_API_VERSION 2
+    // #warn  "Discovered nrfx v2.x.x APIs ... "
+#else
+    #define SIMPLEHACKS_HW_RNG_NRFX_API_VERSION 1
+    // #warn "Discovered nrfx v1.x.x APIs ... "
+#endif
+
+
 namespace SimpleHacks {
 
     // Difficulty: the RNG is used by the SoftDevice.
@@ -72,9 +91,19 @@ namespace SimpleHacks {
         HW_RNG& operator=(const HW_RNG&&) =delete;
     public: // user API
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void begin() {
+#if SIMPLEHACKS_HW_RNG_NRFX_API_VERSION == 2
+            // Nordic changes API between nrfx v1.7.2 and v2.1.0...
             nrf_rng_error_correction_enable(NRF_RNG);
             nrf_rng_shorts_disable(NRF_RNG, NRF_RNG_SHORT_VALRDY_STOP_MASK);
             nrf_rng_task_trigger(NRF_RNG, NRF_RNG_TASK_START);
+#elif SIMPLEHACKS_HW_RNG_NRFX_API_VERSION == 1
+            // Nordic changes API between nrfx v1.7.2 and v2.1.0...
+            nrf_rng_error_correction_enable();
+            nrf_rng_shorts_disable(NRF_RNG_SHORT_VALRDY_STOP_MASK);
+            nrf_rng_task_trigger(NRF_RNG_TASK_START);
+#else
+    #error "Unknown NRFX API version ... aborting compilation"
+#endif
         }
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void end() {}
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static uint8_t get_uint8() {
@@ -138,9 +167,19 @@ namespace SimpleHacks {
 
     private: // to support one-time init...
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static uint8_t internal_get_byte() {
+#if SIMPLEHACKS_HW_RNG_NRFX_API_VERSION == 2
+            // Nordic changes API between nrfx v1.7.2 and v2.1.0...
             while (!nrf_rng_event_check(NRF_RNG, NRF_RNG_EVENT_VALRDY));
             uint8_t v = nrf_rng_random_value_get(NRF_RNG);
             nrf_rng_event_clear(NRF_RNG, NRF_RNG_EVENT_VALRDY);
+#elif SIMPLEHACKS_HW_RNG_NRFX_API_VERSION == 1
+            // Nordic changes API between nrfx v1.7.2 and v2.1.0...
+            while (!nrf_rng_event_get(NRF_RNG_EVENT_VALRDY));
+            uint8_t v = nrf_rng_random_value_get();
+            nrf_rng_event_clear(NRF_RNG_EVENT_VALRDY);
+#else
+    #error "Unknown NRFX API version ... aborting compilation"
+#endif
             return v;
         }
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void internal_fill_buffer( void * buffer, size_t count ) {
