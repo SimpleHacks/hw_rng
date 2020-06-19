@@ -72,9 +72,9 @@ namespace SimpleHacks {
         HW_RNG& operator=(const HW_RNG&&) =delete;
     public: // user API
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void begin() {
-            nrf_rng_error_correction_enable();
-            nrf_rng_shorts_disable(NRF_RNG_SHORT_VALRDY_STOP_MASK);
-            nrf_rng_task_trigger(NRF_RNG_TASK_START);
+            nrf_rng_error_correction_enable(NRF_RNG);
+            nrf_rng_shorts_disable(NRF_RNG, NRF_RNG_SHORT_VALRDY_STOP_MASK);
+            nrf_rng_task_trigger(NRF_RNG, NRF_RNG_TASK_START);
         }
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void end() {}
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static uint8_t get_uint8() {
@@ -138,9 +138,9 @@ namespace SimpleHacks {
 
     private: // to support one-time init...
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static uint8_t internal_get_byte() {
-            while (!nrf_rng_event_get(NRF_RNG_EVENT_VALRDY));
-            uint8_t v = nrf_rng_random_value_get();
-            nrf_rng_event_clear(NRF_RNG_EVENT_VALRDY);
+            while (!nrf_rng_event_check(NRF_RNG, NRF_RNG_EVENT_VALRDY));
+            uint8_t v = nrf_rng_random_value_get(NRF_RNG);
+            nrf_rng_event_clear(NRF_RNG, NRF_RNG_EVENT_VALRDY);
             return v;
         }
         SIMPLEHACKS_HW_RNG_INLINE_ATTRIBUTE static void internal_fill_buffer( void * buffer, size_t count ) {
