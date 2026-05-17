@@ -1,4 +1,7 @@
-# HW_RNG arduino library
+# ARCHIVED - HW_RNG arduino library
+
+**This project is now archived.  No additional changes are expected.**
+
 
 A hardware-based true random number generator library, licensed under the MIT license.
 
